@@ -20,9 +20,6 @@ sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 sock.bind(('', 6454))
 
 
-def lhex(h):
-    return ':'.join(x.encode('hex') for x in h)
-
 
 while True:
     data = sock.recv(10240)
