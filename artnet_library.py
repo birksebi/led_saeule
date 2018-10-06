@@ -1,20 +1,19 @@
-import socket
-from neopixel import *
+#Copyright 2018 S.ZWeifel
 
-N = 512
-dmxuni0 = [0 for x in range(N)]
-dmxuni1 = [0 for x in range(N)]
 
-# LED strip configuration:
-LED_COUNT = 288  # Number of LED pixels.
-LED_PIN = 18  # GPIO pin connected to the pixels (18 uses PWM!).
-LED_FREQ_HZ = 800000  # LED signal frequency in hertz (usually 800khz)
-LED_DMA = 10  # DMA channel to use for generating signal (try 10)
-LED_BRIGHTNESS = 255  # Set to 0 for darkest and 255 for brightest
-LED_INVERT = False  # True to invert the signal (when using NPN transistor level shift)
-LED_CHANNEL = 0  # set to '1' for GPIOs 13, 19, 41, 45 or 53
-strip = Adafruit_NeoPixel(LED_COUNT, LED_PIN, LED_FREQ_HZ, LED_DMA, LED_INVERT, LED_BRIGHTNESS, LED_CHANNEL)
-strip.begin()
+import socket   #Netzwerk
+from neopixel import *  #Led Kontrolllibrary einbinden
+
+N = 512 #Anzahl DMX Adressen pro Universum
+dmxuni0 = [0 for x in range(N)]  #Dmx Universum 1
+dmxuni1 = [0 for x in range(N)]  #Dmx Universum 2
+artuni1 = 0 #Artnet Universum 1
+artuni2 = 1 #Artnet Universum 2
+
+strip = Adafruit_NeoPixel(288, 18, 800000, 10, False, 255, 0) #Ledstreifen(Ans Leds,GPIO Pin, PWM Freq, DMA Channel, Helligkeit, Signal Invertieren,Channel)
+strip.begin()   #LED Streifen ansprechen
+
+#Port 6454 abhören
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 sock.bind(('', 6454))
@@ -22,17 +21,14 @@ sock.bind(('', 6454))
 
 
 while True:
-    data = sock.recv(10240)
-    artnet = data[0:7].decode('UTF-8')
-    if artnet != 'Art-Net':
+    data = sock.recv(10240) #Daten aus Port in Variable speichern
+    artnet = data[0:7].decode('UTF-8')  #Bytes 0-7 in UTF-8 Zeichen konvertieren
+    if artnet != 'Art-Net': #Wenn Packet nicht mit "Art-Net" startet, nächstes Packet abarbeiten
         continue
-    if len(data) < 20:
+    if len(data) < 20:  #Wenn Packet kürzer als 20 Bytes ebenfalls direkt nächstes Packet abarbeiten
         continue
-    seq = data[12]
-    physicalnet = data[13]
-    universe = ord(data[14:15])
-    lenght = ord(data[16:17])
-    if universe == 0:
+    universe = ord(data[14:15]) #Universe abspeichern(Bytes 14 und 15)
+    if universe == artuni1:
         x = 0
         for x in range(512):
             y = x + 18
@@ -48,7 +44,7 @@ while True:
             blue = blue + 3
             green = green + 3
             lednr = lednr + 1
-    elif universe == 1:
+    elif universe == artuni2:
         x = 0
         for x in range(512):
             y = x + 18
